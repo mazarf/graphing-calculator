@@ -26,7 +26,6 @@ class Parser {
 			if(Character.isDigit(currentValue)) {
 				// process digit, account for offset
 				double[] resultAndOffset = processDigit(expression, i);
-				//System.out.println(resultAndOffset[1]);
 				numbers.push(resultAndOffset[0]);
 				i = i + (int)resultAndOffset[1] - 1;
 			}
@@ -35,28 +34,27 @@ class Parser {
 			}
 			else if(isOperator(currentValue)) {
 				// process operator
-				// if operator priority is lower than the top of stack,
-				// pop until the stack is empty or the thing on top is lower 
-				// priority
-				
+				if(currentValue == '-' && (i == 0 || isOperator(expression.charAt(i - 1))))
+					currentValue = '~'; // unary negative operator
 				processOperator(numbers, operators, currentValue);
 				
 			}
 			else {
 				System.out.println("Error: item not recognized: " + currentValue);
-				return 0.0;
+				return Double.NaN;
 			}
 		} // end for
 		
 		// cleanup
-		while(!operators.empty() &&  numbers.size() > 1) {	
+		while(!operators.empty() && operators.peek() != '(') {
+			if(numbers.size() > 1) {	
 				double op2 = numbers.pop();
 				double op1 = numbers.pop();
 				numbers.push(operate(op1, op2, operators.pop()));
-				
-				if(!operators.empty() && operators.peek() == '(') {
-					operators.pop();
-				}
+			} else { // unary operator
+				double op1 = numbers.pop();
+				numbers.push(operate(0, op1, operators.pop()));
+			}
 		}
 		
 		return numbers.peek();
@@ -82,19 +80,26 @@ class Parser {
 	// operator functions
 	
 	private static void processOperator(Stack<Double> numbers, Stack<Character> operators, char operator) {
-		if(operator == '(' || numbers.size() == 1) {
+		if(operator == '(') {
 			operators.push(operator);
 		} 
+		else if(numbers.size() == 1) { // handles the corner case of a '-' at the beginning
+			if(!operators.empty() && operators.peek() == '~') {
+				double op1 = numbers.pop();
+				numbers.push(operate(0.0, op1, operators.pop()));
+			}
+			if(operator != ')')
+				operators.push(operator);
+		}
 		else {
 			while(!operators.empty() && operators.peek() != '('  && 
 					priority(operator) <= priority(operators.peek())) {	
 					double op2 = numbers.pop();
-					double op1 = numbers.pop();
-					numbers.push(operate(op1, op2, operators.peek()));
-					operators.pop();
+					double op1 = (operators.peek() == '~') ? 0 : numbers.pop();
+					numbers.push(operate(op1, op2, operators.pop()));
 			}
 			
-			if(!operators.empty() && operators.peek() == '(') // get rid of left parens
+			if(!operators.empty() && operators.peek() == '(')
 				operators.pop();
 			
 			if(operator != ')')
@@ -116,8 +121,10 @@ class Parser {
 				return op1 / op2;
 			case '^':
 				return Math.pow(op1, op2);
+			case '~': 
+				return -op2;
 			default:
-				return 0.0; // error, i doubt it will happen though
+				return Double.NaN; // error
 			}
 	}
 	
@@ -129,7 +136,8 @@ class Parser {
 				c == '/' ||
 				c == '^' ||
 				c == '(' ||
-				c == ')';
+				c == ')' ||
+				c == '~'; // unary negation
 	}
 	
 	
@@ -148,6 +156,8 @@ class Parser {
 				return 3;
 			case '^':
 				return 4;
+			case '~':
+				return 5;
 			default: // error
 				return -1;
 		} // switch
