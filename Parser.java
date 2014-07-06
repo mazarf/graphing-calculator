@@ -15,6 +15,10 @@ class Parser {
 	}
 	
 	public static double evaluate(String expression) {
+		return evaluate(expression, 0.0);
+	}
+	
+	public static double evaluate(String expression, double variable) {
 		// uses shunting-yard algorithm
 		Stack<Double> numbers = new Stack<Double>();
 		Stack<Character> operators = new Stack<Character>();
@@ -31,6 +35,8 @@ class Parser {
 			}
 			else if(currentValue == 'x') {
 				// replace with value, otherwise treat as a number
+				numbers.push(variable);
+				
 			}
 			else if(isOperator(currentValue)) {
 				// process operator
@@ -57,7 +63,14 @@ class Parser {
 			}
 		}
 		
+		if(!operators.empty()) // last parentheses
+			operators.pop();
+			
+		if(!operators.empty() && operators.peek() == '~') // last negation
+			numbers.push(operate(0, numbers.pop(), operators.pop()));
+			
 		return numbers.peek();
+			
 	} // evaluate()
 	
 	
@@ -100,7 +113,14 @@ class Parser {
 			}
 			
 			if(!operators.empty() && operators.peek() == '(')
+			{
 				operators.pop();
+				if(!operators.empty() && operators.peek() == '~')
+				{
+					// handle negatives in front of parentheses
+					numbers.push(operate(0, numbers.pop(), operators.pop()));
+				}
+			}
 			
 			if(operator != ')')
 				operators.push(operator);
