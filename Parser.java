@@ -2,17 +2,17 @@
 import java.util.*; // stacks
 
 /**
- * Parser object used to evaluate an infix expression contained in a string.
+ * Parser static class used to evaluate an infix expression contained in a string.
  **/
 class Parser {
-	public static void main(String args[]) {
-		Scanner s = new Scanner(System.in);
-		String st = "";
-		while(!st.equals("q")) {
-			st = s.nextLine();
-			System.out.println(evaluate(st));
-		}
-	}
+	//public static void main(String args[]) {
+		//Scanner s = new Scanner(System.in);
+		//String st = "";
+		//while(!st.equals("q")) {
+			//st = s.nextLine();
+			//System.out.println(evaluate(st));
+		//}
+	//}
 	
 	public static double evaluate(String expression) {
 		return evaluate(expression, 0.0);
@@ -27,7 +27,7 @@ class Parser {
 		
 		for(int i = 0; i < expression.length(); i++) {
 			char currentValue = expression.charAt(i);
-			if(Character.isDigit(currentValue)) {
+			if(Character.isDigit(currentValue) || currentValue == '.') {
 				// process digit, account for offset
 				double[] resultAndOffset = processDigit(expression, i);
 				numbers.push(resultAndOffset[0]);
@@ -53,14 +53,9 @@ class Parser {
 		
 		// cleanup
 		while(!operators.empty() && operators.peek() != '(') {
-			if(numbers.size() > 1) {	
 				double op2 = numbers.pop();
-				double op1 = numbers.pop();
+				double op1 = (operators.peek() == '~') ? 0 : numbers.pop();
 				numbers.push(operate(op1, op2, operators.pop()));
-			} else { // unary operator
-				double op1 = numbers.pop();
-				numbers.push(operate(0, op1, operators.pop()));
-			}
 		}
 		
 		if(!operators.empty()) // last parentheses
@@ -96,14 +91,14 @@ class Parser {
 		if(operator == '(') {
 			operators.push(operator);
 		} 
-		else if(numbers.size() == 1) { // handles the corner case of a '-' at the beginning
-			if(!operators.empty() && operators.peek() == '~') {
-				double op1 = numbers.pop();
-				numbers.push(operate(0.0, op1, operators.pop()));
-			}
-			if(operator != ')')
-				operators.push(operator);
-		}
+		//else if(numbers.size() == 1) { // handles the corner case of a '-' at the beginning
+		//	if(!operators.empty() && operators.peek() == '~') {
+		//		double op1 = numbers.pop();
+		//		numbers.push(operate(0.0, op1, operators.pop()));
+		//	}
+		//	if(operator != ')')
+		//		operators.push(operator);
+		//}
 		else {
 			while(!operators.empty() && operators.peek() != '('  && 
 					priority(operator) <= priority(operators.peek())) {	
@@ -112,13 +107,14 @@ class Parser {
 					numbers.push(operate(op1, op2, operators.pop()));
 			}
 			
-			if(!operators.empty() && operators.peek() == '(')
+			if(!numbers.empty() && !operators.empty() && operators.peek() == '(')
 			{
 				operators.pop();
 				if(!operators.empty() && operators.peek() == '~')
 				{
 					// handle negatives in front of parentheses
-					numbers.push(operate(0, numbers.pop(), operators.pop()));
+					double op1 = numbers.pop();
+					numbers.push(operate(0, op1, operators.pop()));
 				}
 			}
 			
@@ -174,9 +170,9 @@ class Parser {
 			case '*':
 			case '/':
 				return 3;
-			case '^':
-				return 4;
 			case '~':
+				return 4;
+			case '^':
 				return 5;
 			default: // error
 				return -1;
