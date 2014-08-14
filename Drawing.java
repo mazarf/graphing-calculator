@@ -43,35 +43,22 @@ public class Drawing extends JPanel {
 		{
 			if(!Double.isNaN(function(i,s)))
 			{
+				int y = (int)(function(i,s) * ySpacing);
 				g.fillOval(d.width/2 + (int)(i * xSpacing) - 3, d.height/2 - (int)(function(i, s) * ySpacing) - 3, 6, 6);
 			}
-			i = i + 0.001;
+			i = i + 0.01;
 		}
 		
 	}
 	
 	double function(double x, String s)
 	{
-		
 		if(s != null)
 		{
 			return Parser.evaluate(s, x);
 		}
 		
-		/*double num = x + 1;
-		double denom = x*x - 2;
-		
-		if(denom != 0)
-		{
-			return (num / denom);
-		}
-		else
-		{
-			return 999e99;
-		}*/
-		
 		return Math.pow(x, 0.5);
-		
 	}
 }
 

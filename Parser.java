@@ -33,6 +33,14 @@ class Parser {
 				numbers.push(resultAndOffset[0]);
 				i = i + (int)resultAndOffset[1] - 1;
 			}
+			else if(currentValue == 'e')
+			{
+				numbers.push(Math.E);
+			}
+			else if(currentValue == 'p')
+			{
+				numbers.push(Math.PI);
+			}
 			else if(currentValue == 'x') {
 				// replace with value, otherwise treat as a number
 				numbers.push(variable);
@@ -65,12 +73,14 @@ class Parser {
 			numbers.push(operate(0, numbers.pop(), operators.pop()));
 			
 		return numbers.peek();
+		
 			
 	} // evaluate()
 	
 	
 	// returns the processed digit and an offset for the loop
 	private static double[] processDigit(String expression, int location) {
+		
 		int offset = 0;
 		for(; location + offset < expression.length() &&
 			(Character.isDigit(expression.charAt(location + offset))
